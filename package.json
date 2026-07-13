@@ -1,0 +1,17 @@
+{
+  "name": "safescope",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @safescope/web",
+    "build": "npm run build --workspace @safescope/web",
+    "test": "npm run test --workspace @safescope/web",
+    "lint": "npm run lint --workspace @safescope/web"
+  },
+  "overrides": {
+    "postcss": "8.5.17"
+  }
+}

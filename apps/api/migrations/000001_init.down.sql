@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS assets;
+DROP TABLE IF EXISTS projects;
+DROP TABLE IF EXISTS users;
+DROP TYPE IF EXISTS asset_status;
+DROP TYPE IF EXISTS asset_type;
+DROP TYPE IF EXISTS project_status;
+DROP TYPE IF EXISTS user_role;

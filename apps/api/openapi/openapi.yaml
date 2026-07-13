@@ -1,0 +1,352 @@
+openapi: 3.1.0
+info:
+  title: SafeScope API
+  version: 0.1.0
+  description: API for the SafeScope AI Security Workspace.
+servers:
+  - url: http://localhost:8080/api/v1
+tags:
+  - name: Authentication
+  - name: Dashboard
+  - name: Projects
+  - name: Assets
+  - name: Users
+paths:
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register an account
+      description: The first registered account becomes an administrator; later accounts become analysts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "201": { $ref: "#/components/responses/AuthResponse" }
+        "400": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/AuthResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+  /me:
+    get:
+      tags: [Authentication]
+      summary: Return the authenticated user
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Current user
+          content: { application/json: { schema: { $ref: "#/components/schemas/User" } } }
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Return a role-scoped workspace summary
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Dashboard metrics
+          content: { application/json: { schema: { $ref: "#/components/schemas/Dashboard" } } }
+  /users:
+    get:
+      tags: [Users]
+      summary: List users
+      description: Administrator only.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Offset" }
+      responses:
+        "200":
+          description: User collection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/User" }
+        "403": { $ref: "#/components/responses/Error" }
+  /users/{userID}/role:
+    put:
+      tags: [Users]
+      summary: Change a user's role
+      description: Administrator only. Administrators cannot change their own role.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { $ref: "#/components/schemas/Role" }
+      responses:
+        "204": { description: Role updated }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List accessible projects
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Offset" }
+      responses:
+        "200":
+          description: Project collection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Project" }
+    post:
+      tags: [Projects]
+      summary: Create a project
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProjectInput" }
+      responses:
+        "201":
+          description: Created project
+          content: { application/json: { schema: { $ref: "#/components/schemas/Project" } } }
+        "403": { $ref: "#/components/responses/Error" }
+  /projects/{projectID}:
+    parameters:
+      - { $ref: "#/components/parameters/ProjectID" }
+    get:
+      tags: [Projects]
+      summary: Get a project
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Project
+          content: { application/json: { schema: { $ref: "#/components/schemas/Project" } } }
+        "404": { $ref: "#/components/responses/Error" }
+    put:
+      tags: [Projects]
+      summary: Update a project
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProjectInput" }
+      responses:
+        "200":
+          description: Updated project
+          content: { application/json: { schema: { $ref: "#/components/schemas/Project" } } }
+    delete:
+      tags: [Projects]
+      summary: Delete a project and its assets
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Project deleted }
+  /projects/{projectID}/assets:
+    parameters:
+      - { $ref: "#/components/parameters/ProjectID" }
+    get:
+      tags: [Assets]
+      summary: List project assets
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Asset collection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Asset" }
+    post:
+      tags: [Assets]
+      summary: Add an asset
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetCreate" }
+      responses:
+        "201":
+          description: Created asset
+          content: { application/json: { schema: { $ref: "#/components/schemas/Asset" } } }
+        "409": { $ref: "#/components/responses/Error" }
+  /assets/{assetID}:
+    parameters:
+      - name: assetID
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    put:
+      tags: [Assets]
+      summary: Update asset observations
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetUpdate" }
+      responses:
+        "200":
+          description: Updated asset
+          content: { application/json: { schema: { $ref: "#/components/schemas/Asset" } } }
+    delete:
+      tags: [Assets]
+      summary: Delete an asset
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Asset deleted }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ProjectID:
+      name: projectID
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+    Offset:
+      name: offset
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+  responses:
+    AuthResponse:
+      description: Authentication result
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              token: { type: string }
+              expires_at: { type: string, format: date-time }
+              user: { $ref: "#/components/schemas/User" }
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: { type: string }
+                  message: { type: string }
+  schemas:
+    Role:
+      type: string
+      enum: [admin, analyst, viewer]
+    User:
+      type: object
+      required: [id, email, name, role]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        name: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    RegisterRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    ProjectInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        status: { type: string, enum: [active, archived] }
+    Project:
+      allOf:
+        - { $ref: "#/components/schemas/ProjectInput" }
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            owner_id: { type: string, format: uuid }
+            asset_count: { type: integer }
+            created_at: { type: string, format: date-time }
+            updated_at: { type: string, format: date-time }
+    AssetCreate:
+      type: object
+      required: [type, value]
+      properties:
+        type: { type: string, enum: [domain, ip, url, service] }
+        value: { type: string }
+        tags: { type: array, items: { type: string } }
+        metadata: { type: object, additionalProperties: true }
+    AssetUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [unknown, alive, down] }
+        tags: { type: array, items: { type: string } }
+        metadata: { type: object, additionalProperties: true }
+    Asset:
+      allOf:
+        - { $ref: "#/components/schemas/AssetCreate" }
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            project_id: { type: string, format: uuid }
+            status: { type: string, enum: [unknown, alive, down] }
+            created_at: { type: string, format: date-time }
+            updated_at: { type: string, format: date-time }
+    Dashboard:
+      type: object
+      properties:
+        projects: { type: integer }
+        assets: { type: integer }
+        alive_assets: { type: integer }
+        archived_projects: { type: integer }
+        recent_assets:
+          type: array
+          items: { $ref: "#/components/schemas/Asset" }
+        assets_by_type:
+          type: array
+          items:
+            type: object
+            properties:
+              label: { type: string }
+              value: { type: integer }

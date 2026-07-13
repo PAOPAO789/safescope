@@ -1,0 +1,11 @@
+.env
+.env.local
+node_modules/
+.next/
+coverage/
+dist/
+bin/
+*.exe
+*.log
+.DS_Store
+Thumbs.db
