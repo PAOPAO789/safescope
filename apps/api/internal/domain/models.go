@@ -44,6 +44,10 @@ const (
 	ProjectArchived ProjectStatus = "archived"
 )
 
+func (s ProjectStatus) Valid() bool {
+	return s == ProjectActive || s == ProjectArchived
+}
+
 type Project struct {
 	ID          string        `json:"id"`
 	Name        string        `json:"name"`

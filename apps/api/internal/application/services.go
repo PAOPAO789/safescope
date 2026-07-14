@@ -146,7 +146,10 @@ func (s *ProjectService) Update(ctx context.Context, actor *domain.User, id, nam
 		project.Name = strings.TrimSpace(name)
 	}
 	project.Description = strings.TrimSpace(description)
-	if status == domain.ProjectActive || status == domain.ProjectArchived {
+	if status != "" && !status.Valid() {
+		return nil, domain.ErrInvalidInput
+	}
+	if status.Valid() {
 		project.Status = status
 	}
 	project.UpdatedAt = time.Now().UTC()
@@ -210,6 +213,9 @@ func (s *ProjectService) UpdateAsset(ctx context.Context, actor *domain.User, id
 	}
 	if err := s.authorize(ctx, actor, asset.ProjectID, true); err != nil {
 		return nil, err
+	}
+	if status != "" && !status.Valid() {
+		return nil, domain.ErrInvalidInput
 	}
 	if status.Valid() {
 		asset.Status = status

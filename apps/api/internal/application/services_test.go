@@ -135,6 +135,12 @@ func TestViewerCannotCreateProjectAndOwnerCanCreateAsset(t *testing.T) {
 	if asset.Value != "example.com" || asset.Status != domain.AssetAlive {
 		t.Fatalf("unexpected asset: %#v", asset)
 	}
+	if _, err := service.Update(context.Background(), owner, project.ID, project.Name, "", "bad"); !errors.Is(err, domain.ErrInvalidInput) {
+		t.Fatalf("expected invalid project status, got %v", err)
+	}
+	if _, err := service.UpdateAsset(context.Background(), owner, asset.ID, "bad", nil, nil); !errors.Is(err, domain.ErrInvalidInput) {
+		t.Fatalf("expected invalid asset status, got %v", err)
+	}
 	if _, err := service.CreateAsset(context.Background(), owner, project.ID, domain.AssetURL, "https://example.com", "bad", nil, nil); !errors.Is(err, domain.ErrInvalidInput) {
 		t.Fatalf("expected invalid status, got %v", err)
 	}
