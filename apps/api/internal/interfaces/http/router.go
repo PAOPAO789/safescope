@@ -241,7 +241,7 @@ func createAsset(service *application.ProjectService) gin.HandlerFunc {
 			writeError(c, domain.ErrInvalidInput)
 			return
 		}
-		asset, err := service.CreateAsset(c, actor(c), c.Param("projectID"), request.Type, request.Value, request.Tags, metadata)
+		asset, err := service.CreateAsset(c, actor(c), c.Param("projectID"), request.Type, request.Value, request.Status, request.Tags, metadata)
 		if err != nil {
 			writeError(c, err)
 			return

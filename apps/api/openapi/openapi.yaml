@@ -315,6 +315,7 @@ components:
       properties:
         type: { type: string, enum: [domain, ip, url, service] }
         value: { type: string }
+        status: { type: string, enum: [unknown, alive, down], default: unknown }
         tags: { type: array, items: { type: string } }
         metadata: { type: object, additionalProperties: true }
     AssetUpdate:

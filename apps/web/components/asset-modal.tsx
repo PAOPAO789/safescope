@@ -49,7 +49,7 @@ export function AssetModal({
             <div className="field"><label htmlFor="asset-type">Type</label><select id="asset-type" name="type" defaultValue="domain"><option value="domain">Domain</option><option value="ip">IP address</option><option value="url">URL</option><option value="service">Service</option></select></div>
             <div className="field"><label htmlFor="asset-value">Value</label><input id="asset-value" name="value" placeholder="example.com" required autoFocus /></div>
           </>}
-          {asset && <div className="field"><label htmlFor="asset-status">Status</label><select id="asset-status" name="status" defaultValue={asset.status}><option value="unknown">Unknown</option><option value="alive">Alive</option><option value="down">Down</option></select></div>}
+          <div className="field"><label htmlFor="asset-status">Status</label><select id="asset-status" name="status" defaultValue={asset?.status ?? "unknown"}><option value="unknown">Unknown</option><option value="alive">Alive</option><option value="down">Down</option></select></div>
           <div className="field"><label htmlFor="asset-tags">Tags</label><input id="asset-tags" name="tags" defaultValue={asset?.tags.join(", ")} placeholder="production, external" /></div>
           {error && <p className="form-error">{error}</p>}
           <div className="modal-actions"><button className="button secondary" type="button" onClick={onClose}>Cancel</button><button className="button" disabled={loading}>{asset ? "Save changes" : "Add asset"}</button></div>

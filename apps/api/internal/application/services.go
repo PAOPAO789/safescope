@@ -163,11 +163,17 @@ func (s *ProjectService) Delete(ctx context.Context, actor *domain.User, id stri
 	return s.projects.Delete(ctx, id)
 }
 
-func (s *ProjectService) CreateAsset(ctx context.Context, actor *domain.User, projectID string, assetType domain.AssetType, value string, tags []string, metadata json.RawMessage) (*domain.Asset, error) {
+func (s *ProjectService) CreateAsset(ctx context.Context, actor *domain.User, projectID string, assetType domain.AssetType, value string, status domain.AssetStatus, tags []string, metadata json.RawMessage) (*domain.Asset, error) {
 	if err := s.authorize(ctx, actor, projectID, true); err != nil {
 		return nil, err
 	}
 	if !assetType.Valid() || strings.TrimSpace(value) == "" {
+		return nil, domain.ErrInvalidInput
+	}
+	if status == "" {
+		status = domain.AssetUnknown
+	}
+	if !status.Valid() {
 		return nil, domain.ErrInvalidInput
 	}
 	if len(metadata) == 0 {
@@ -182,7 +188,7 @@ func (s *ProjectService) CreateAsset(ctx context.Context, actor *domain.User, pr
 	now := time.Now().UTC()
 	asset := &domain.Asset{
 		ID: uuid.NewString(), ProjectID: projectID, Type: assetType, Value: strings.TrimSpace(value),
-		Status: domain.AssetUnknown, Tags: tags, Metadata: metadata, CreatedAt: now, UpdatedAt: now,
+		Status: status, Tags: tags, Metadata: metadata, CreatedAt: now, UpdatedAt: now,
 	}
 	if err := s.assets.Create(ctx, asset); err != nil {
 		return nil, err
@@ -205,7 +211,7 @@ func (s *ProjectService) UpdateAsset(ctx context.Context, actor *domain.User, id
 	if err := s.authorize(ctx, actor, asset.ProjectID, true); err != nil {
 		return nil, err
 	}
-	if status == domain.AssetUnknown || status == domain.AssetAlive || status == domain.AssetDown {
+	if status.Valid() {
 		asset.Status = status
 	}
 	if tags != nil {

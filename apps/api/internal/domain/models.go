@@ -76,6 +76,10 @@ const (
 	AssetDown    AssetStatus = "down"
 )
 
+func (s AssetStatus) Valid() bool {
+	return s == AssetUnknown || s == AssetAlive || s == AssetDown
+}
+
 type Asset struct {
 	ID        string          `json:"id"`
 	ProjectID string          `json:"project_id"`

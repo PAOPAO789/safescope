@@ -128,18 +128,21 @@ func TestViewerCannotCreateProjectAndOwnerCanCreateAsset(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	asset, err := service.CreateAsset(context.Background(), owner, project.ID, domain.AssetDomain, "example.com", []string{"prod"}, json.RawMessage(`{"source":"manual"}`))
+	asset, err := service.CreateAsset(context.Background(), owner, project.ID, domain.AssetDomain, "example.com", domain.AssetAlive, []string{"prod"}, json.RawMessage(`{"source":"manual"}`))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if asset.Value != "example.com" || asset.Status != domain.AssetUnknown {
+	if asset.Value != "example.com" || asset.Status != domain.AssetAlive {
 		t.Fatalf("unexpected asset: %#v", asset)
 	}
-	untagged, err := service.CreateAsset(context.Background(), owner, project.ID, domain.AssetIP, "192.0.2.1", nil, nil)
+	if _, err := service.CreateAsset(context.Background(), owner, project.ID, domain.AssetURL, "https://example.com", "bad", nil, nil); !errors.Is(err, domain.ErrInvalidInput) {
+		t.Fatalf("expected invalid status, got %v", err)
+	}
+	untagged, err := service.CreateAsset(context.Background(), owner, project.ID, domain.AssetIP, "192.0.2.1", "", nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if untagged.Tags == nil || string(untagged.Metadata) != "{}" {
+	if untagged.Tags == nil || string(untagged.Metadata) != "{}" || untagged.Status != domain.AssetUnknown {
 		t.Fatalf("expected normalized empty values: %#v", untagged)
 	}
 }
