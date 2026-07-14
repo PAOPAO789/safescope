@@ -12,9 +12,13 @@ const initial: Dashboard = {
 export function DashboardView() {
   const [data, setData] = useState<Dashboard>(initial);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api<Dashboard>("/dashboard").then(setData).finally(() => setLoading(false));
+    api<Dashboard>("/dashboard")
+      .then(setData)
+      .catch((cause) => setError(cause instanceof Error ? cause.message : "Unable to load dashboard"))
+      .finally(() => setLoading(false));
   }, []);
 
   const max = Math.max(...data.assets_by_type.map((metric) => metric.value), 1);
@@ -30,6 +34,7 @@ export function DashboardView() {
       <div className="page-head">
         <div><h1>Security overview</h1><p>Current asset visibility and workspace activity.</p></div>
       </div>
+      {error && <p className="form-error">{error}</p>}
       <section className="metrics">
         {metrics.map(({ label, value, icon: Icon, note }) => (
           <div className="metric-card" key={label}>

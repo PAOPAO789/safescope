@@ -17,6 +17,7 @@ export function ProjectDetailView({ id }: { id: string }) {
   const [editing, setEditing] = useState<Asset | "new" | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -27,15 +28,20 @@ export function ProjectDetailView({ id }: { id: string }) {
       setProject(projectResult);
       setAssets(assetResult.items);
       setUser(current);
-    });
+    }).catch((cause) => setError(cause instanceof Error ? cause.message : "Unable to load project"));
   }, [id]);
 
   async function remove(asset: Asset) {
     if (!window.confirm(`Delete ${asset.value}?`)) return;
-    await api<void>(`/assets/${asset.id}`, { method: "DELETE" });
-    setAssets((items) => items.filter((item) => item.id !== asset.id));
+    try {
+      await api<void>(`/assets/${asset.id}`, { method: "DELETE" });
+      setAssets((items) => items.filter((item) => item.id !== asset.id));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to delete asset");
+    }
   }
 
+  if (error && !project) return <div className="content"><div className="panel empty">{error}</div></div>;
   if (!project) return <div className="content loading">Loading project...</div>;
   const writable = user?.role !== "viewer";
   const visibleAssets = assets.filter((asset) => matchesAsset(asset, query));
@@ -59,6 +65,7 @@ export function ProjectDetailView({ id }: { id: string }) {
         <div className="metric-card"><div className="metric-label">Domains</div><strong>{assets.filter((asset) => asset.type === "domain").length}</strong><small>DNS scopes</small></div>
         <div className="metric-card"><div className="metric-label">Updated</div><strong style={{ fontSize: 18 }}>{formatDate(project.updated_at)}</strong><small>Project activity</small></div>
       </section>
+      {error && <p className="form-error">{error}</p>}
       <section className="panel">
         <div className="panel-head">
           <h2>Assets</h2>

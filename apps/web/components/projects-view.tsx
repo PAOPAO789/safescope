@@ -12,11 +12,13 @@ export function ProjectsView() {
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [query, setQuery] = useState("");
 
   useEffect(() => {
     Promise.all([api<{ items: Project[] }>("/projects"), api<User>("/me")])
       .then(([result, current]) => { setProjects(result.items); setUser(current); })
+      .catch((cause) => setError(cause instanceof Error ? cause.message : "Unable to load projects"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -31,7 +33,7 @@ export function ProjectsView() {
           {user?.role !== "viewer" && <button className="button" onClick={() => setOpen(true)}><Plus size={16} />New project</button>}
         </div>
       </div>
-      {loading ? <div className="loading">Loading projects...</div> : visibleProjects.length ? (
+      {error ? <div className="panel empty">{error}</div> : loading ? <div className="loading">Loading projects...</div> : visibleProjects.length ? (
         <section className="project-grid">{visibleProjects.map((project) => (
           <Link className="project-card" href={`/projects/${project.id}`} key={project.id}>
             <div className="project-card-head"><h2>{project.name}</h2><span className={`badge ${project.status}`}>{project.status}</span></div>
